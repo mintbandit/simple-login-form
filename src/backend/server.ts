@@ -35,8 +35,22 @@ const fastify = Fastify({
 }
 
 fastify.get('/', async (request, reply) =>{
-  await reply.send('hello');
+  await reply.redirect('/signin');
 })
+
+fastify.get('/signin', async (request, reply) => {
+  const rendered = templates.render('signin.njk', { environment });
+  return await reply
+    .header('content-type', 'text/html; charset=utf-8')
+    .send(rendered);
+});
+
+fastify.get('/signup', async (request, reply) => {
+  const rendered = templates.render('signup.njk', { environment });
+  return await reply
+    .header('content-type', 'text/html; charset=utf-8')
+    .send(rendered);
+});
 
 const start = async (): Promise<void> => {
   try {
