@@ -6,7 +6,8 @@ import cookie from '@fastify/cookie';
 import formBody from '@fastify/formbody';
 import staticFiles from '@fastify/static';
 import { z } from 'zod';
-import { connect, newDb, SqliteSession, SqliteUserRepository} from "./db";
+import { connect, newDb, SqliteSession, SqliteUserRepository } from "./db";
+import { comparePassword, hashPassword } from "./auth";
 
 dotenv.config();
 
@@ -77,14 +78,14 @@ fastify.post('/account/signup', async (request, reply) => {
   const db = await connect(USER_DB);
   const userRepository = new SqliteUserRepository(db);
 
-  // TODO hashpassword
+  const hashedPassword = await hashPassword(requestData.password);
 
   try {
     const newUser = {
       ...requestData,
       id: 0,
       agreedToTerms: true,
-      hashedPassword: 'FIXME',
+      hashedPassword,
     }
     const user = await userRepository.create(newUser);
     return await reply.redirect('/welcome');
