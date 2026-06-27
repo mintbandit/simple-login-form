@@ -3,3 +3,4 @@
 .vscode
 /dist
 .parcel-cache
+users.sqlite
