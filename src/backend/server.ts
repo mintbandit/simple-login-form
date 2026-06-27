@@ -33,6 +33,13 @@ const accountCreateRequestSchema = z.object({
 
 type AccountCreateRequest = z.infer<typeof accountCreateRequestSchema>;
 
+const accountLoginRequestSchema = z.object({
+  email: z.string(),
+  password: z.string(),
+})
+
+type AccountLoginRequest = z.infer<typeof accountLoginRequestSchema>;
+
 {
   fastify.register(formBody);
   fastify.register(cookie,{
@@ -52,6 +59,35 @@ fastify.get('/signin', async (request, reply) => {
   return await reply
     .header('content-type', 'text/html; charset=utf-8')
     .send(rendered);
+});
+
+fastify.post('/account/signin', async (request, reply) => {
+  let requestData: AccountLoginRequest;
+  try {
+    requestData = accountCreateRequestSchema.parse(request.body);
+  } catch (e) {
+    // TODO show error message
+    return await reply.redirect('/signin');
+  }
+
+  const db = await connect(USER_DB);
+  const userRepository = new SqliteUserRepository(db);
+  try {
+    const user = await userRepository.findByEmail(requestData.email);
+    if(user === undefined){
+      // TODO show error message
+      return await reply.redirect('/signin')
+    }
+    const passwordMatches = await comparePassword(requestData.password, user.hashedPassword);
+    if(!passwordMatches){
+      // TODO show error message
+      return await reply.redirect('/signin');
+    }
+    return await reply.redirect('/welcome');
+  } catch (e) {
+    // TODO show error message
+    return await reply.redirect('/signin');
+  }
 });
 
 fastify.get('/signup', async (request, reply) => {
