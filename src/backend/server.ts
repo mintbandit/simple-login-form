@@ -8,8 +8,11 @@ import staticFiles from '@fastify/static';
 import { z } from 'zod';
 import { connect, newDb, SqliteSession, SqliteUserRepository } from "./db";
 import { comparePassword, hashPassword } from "./auth";
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 dotenv.config();
+
+const SESSION_COOKIE = "SESSION_ID";
 
 const environment = process.env.NODE_ENV;
 const cookieSecret = process.env.COOKIE_SECRET;
@@ -50,6 +53,16 @@ type AccountLoginRequest = z.infer<typeof accountLoginRequestSchema>;
   });
 }
 
+function setSessionCookie(reply: FastifyReply, sessionId: string): void {
+  reply.setCookie(SESSION_COOKIE, sessionId, {
+    path: '/',
+  });
+}
+
+function readSessionCookie(request: FastifyRequest): string | undefined {
+  return request.cookies[SESSION_COOKIE]
+}
+
 fastify.get('/', async (request, reply) =>{
   await reply.redirect('/signin');
 })
@@ -83,6 +96,10 @@ fastify.post('/account/signin', async (request, reply) => {
       // TODO show error message
       return await reply.redirect('/signin');
     }
+
+    const sessions = new SqliteSession(db);
+    const sessionId = await sessions.create(user.id);
+    setSessionCookie(reply, sessionId);
     return await reply.redirect('/welcome');
   } catch (e) {
     // TODO show error message
@@ -124,6 +141,9 @@ fastify.post('/account/signup', async (request, reply) => {
       hashedPassword,
     }
     const user = await userRepository.create(newUser);
+    const sessions = new SqliteSession(db);
+    const sessionId = await sessions.create(user.id);
+    setSessionCookie(reply, sessionId);
     return await reply.redirect('/welcome');
   } catch (e) {
     // TODO show error message
