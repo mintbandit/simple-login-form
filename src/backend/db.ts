@@ -1,12 +1,16 @@
 import { AsyncDatabase } from "promised-sqlite3";
 import { v4 as uuidv4 } from 'uuid';
-import type { HashedPassword } from "./auth";
+import { HashedPassword } from "./auth";
 
 export interface User {
   id: number;
   email: string;
   hashedPassword: HashedPassword;
   agreedToTerms: boolean;
+}
+
+interface UserDto extends Omit<User, "hashedPassword">{
+  hashedPassword: string;
 }
 
 export interface UserRepository {
@@ -30,11 +34,23 @@ export class SqliteUserRepository implements UserRepository {
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
-    return await this.db.get('SELECT * FROM users WHERE email = ? ', email);
+    const userId: { id: number } | undefined = await this.db.get('SELECT id FROM users WHERE email = ? ', email);
+    if(userId !== undefined){
+      return await this.get(userId.id)
+    }
+    return undefined;
   }
 
   async get(userId: number): Promise<User | undefined> {
-    return await this.db.get('SELECT * FROM users WHERE id =?', userId);
+    const user: UserDto | undefined = await this.db.get('SELECT * FROM users WHERE id =?', userId);
+    if(user !== undefined){
+      return {
+        ...user,
+        hashedPassword: new HashedPassword(user.hashedPassword)
+      }
+    } else {
+      return undefined
+    }
   }
 }
 
@@ -44,7 +60,7 @@ export class SqliteSession {
   async create(userId: number): Promise<string> {
     const sessionId = uuidv4();
     await this.db.run(
-      'INSERT INTO sessions (sesionId, user_id) VALUES (?,?)',
+      'INSERT INTO sessions (session_id, user_id) VALUES (?,?)',
       [sessionId, userId]
     );
     return sessionId;
@@ -70,7 +86,7 @@ export async function newDb(db: AsyncDatabase): Promise<void> {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
+      hashedPassword TEXT NOT NULL,
       agreedToTerms BOOLEAN NOT NULL
     );
     CREATE TABLE IF NOT EXISTS sessions (
