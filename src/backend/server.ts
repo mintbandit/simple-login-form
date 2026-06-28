@@ -33,14 +33,14 @@ const accountCreateRequestSchema = z.object({
   email: z.string(),
   password: z.string(),
   agreedToTerms: z.string().optional(),
-})
+});
 
 type AccountCreateRequest = z.infer<typeof accountCreateRequestSchema>;
 
 const accountLoginRequestSchema = z.object({
   email: z.string(),
   password: z.string(),
-})
+});
 
 type AccountLoginRequest = z.infer<typeof accountLoginRequestSchema>;
 
@@ -62,7 +62,7 @@ function setFlashCookie(reply: FastifyReply, msg: string): void {
 }
 
 function readFlashCookie(request: FastifyRequest): string | undefined {
-  return request.cookies[FLASH_MSG_COOKIE]
+  return request.cookies[FLASH_MSG_COOKIE];
 }
 
 function setSessionCookie(reply: FastifyReply, sessionId: string): void {
@@ -72,15 +72,16 @@ function setSessionCookie(reply: FastifyReply, sessionId: string): void {
 }
 
 function readSessionCookie(request: FastifyRequest): string | undefined {
-  return request.cookies[SESSION_COOKIE]
+  return request.cookies[SESSION_COOKIE];
 }
 
 fastify.get('/', async (request, reply) =>{
   await reply.redirect('/signin');
-})
+});
 
 fastify.get('/signin', async (request, reply) => {
-  const rendered = templates.render('signin.njk', { environment });
+  const serverMsg = readFlashCookie(request);
+  const rendered = templates.render('signin.njk', { server_msg: serverMsg, environment });
   return await reply
     .header('content-type', 'text/html; charset=utf-8')
     .send(rendered);
@@ -101,7 +102,7 @@ fastify.post('/account/signin', async (request, reply) => {
     const user = await userRepository.findByEmail(requestData.email);
     if(user === undefined){
       setFlashCookie(reply, 'Invalid login credentials');
-      return await reply.redirect('/signin')
+      return await reply.redirect('/signin');
     }
     const passwordMatches = await comparePassword(requestData.password, user.hashedPassword);
     if(!passwordMatches){
@@ -120,7 +121,8 @@ fastify.post('/account/signin', async (request, reply) => {
 });
 
 fastify.get('/signup', async (request, reply) => {
-  const rendered = templates.render('signup.njk', { environment });
+  const serverMsg = readFlashCookie(request);
+  const rendered = templates.render('signup.njk', { server_msg: serverMsg, environment });
   return await reply
     .header('content-type', 'text/html; charset=utf-8')
     .send(rendered);
