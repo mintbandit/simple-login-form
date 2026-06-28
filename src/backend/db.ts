@@ -29,13 +29,13 @@ export class SqliteUserRepository implements UserRepository {
     );
     return {
       ...user,
-      id: userID.id
+      id: userID.id,
     }
   }
 
   async findByEmail(email: string): Promise<User | undefined> {
     const userId: { id: number } | undefined = await this.db.get('SELECT id FROM users WHERE email = ? ', email);
-    if(userId !== undefined){
+    if (userId !== undefined ){
       return await this.get(userId.id)
     }
     return undefined;
@@ -43,14 +43,13 @@ export class SqliteUserRepository implements UserRepository {
 
   async get(userId: number): Promise<User | undefined> {
     const user: UserDto | undefined = await this.db.get('SELECT * FROM users WHERE id =?', userId);
-    if(user !== undefined){
+    if (user !== undefined) {
       return {
         ...user,
         hashedPassword: new HashedPassword(user.hashedPassword)
       }
-    } else {
-      return undefined
     }
+    return undefined;
   }
 }
 
@@ -61,7 +60,7 @@ export class SqliteSession {
     const sessionId = uuidv4();
     await this.db.run(
       'INSERT INTO sessions (session_id, user_id) VALUES (?,?)',
-      [sessionId, userId]
+      [sessionId, userId],
     );
     return sessionId;
   }
@@ -69,8 +68,8 @@ export class SqliteSession {
   async get(sessionId: string): Promise<User | undefined> {
     const userId: { user_id: number} | undefined =
       await this.db.get('SELECT user_id FROM sessions WHERE session_id =?', sessionId);
-    if(userId === undefined){
-      return undefined
+    if (userId === undefined) {
+      return undefined;
     }
     const users = new SqliteUserRepository(this.db);
     return await users.get(userId.user_id);
@@ -78,7 +77,7 @@ export class SqliteSession {
 }
 
 export async function connect(connectionString: string): Promise<AsyncDatabase>{
-  return await AsyncDatabase.open(connectionString)
+  return await AsyncDatabase.open(connectionString);
 }
 
 export async function newDb(db: AsyncDatabase): Promise<void> {

@@ -1,8 +1,8 @@
 const browserify = require("browserify");
 const tsify = require("tsify");
-const fs = require("fs");
+const fs = require("node:fs");
 const { glob, globSync } = require('glob');
-const path = require('path');
+const path = require('node:path');
 
 function copyFiles(pattern, destination) {
   const files = globSync(pattern);
@@ -13,7 +13,6 @@ function copyFiles(pattern, destination) {
     fs.copyFile(file, destinationPath, (err) => {
       if (err) {
         console.error(`Error copying file '${file}':`, err);
-        return;
       } else {
         console.log(`copy '${file}' -> '${destinationPath}'`);
       }

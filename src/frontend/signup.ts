@@ -15,31 +15,31 @@ const submitBtm = document.getElementById('form-submit');
 const errors = new FieldError();
 
 function updateSubmitBtn(): void {
-  if(errors.isEmpty() && emailField.value.length > 0 && passwordField.value > 0 && agreeTosCheckBox.checked){
+  if (errors.isEmpty() && emailField.value.length > 0 && passwordField.value > 0 && agreeTosCheckBox.checked) {
     submitBtm?.classList.remove('btn-disabled');
   } else {
     submitBtm?.classList.add('btn-disabled');
   }
 }
 
-emailField.addEventListener('input', (_) =>{
+emailField.addEventListener('input', (_) => {
   const userNameFailures = checkUsername(emailField.value);
-  if(userNameFailures.length > 0){
+  if (userNameFailures.length > 0) {
     const formattedErrors = userNameFailures.join('<br>');
     errors.set('invalid-email', emailField, emailInvalidLabel, formattedErrors);
   } else {
     errors.remove('invalid-email', emailField, emailInvalidLabel)
   }
   updateSubmitBtn();
-})
+});
 
-agreeTosCheckBox.addEventListener('change', (_) =>{
+agreeTosCheckBox.addEventListener('change', (_) => {
   updateSubmitBtn();
-})
+});
 
-passwordField.addEventListener('input', (_) =>{
+passwordField.addEventListener('input', (_) => {
   const passwordFailures = checkComplexity(passwordField.value);
-  if(passwordFailures.length > 0){
+  if (passwordFailures.length > 0) {
     const formattedErrors = passwordFailures.join('<br>');
     errors.set('invalid-password', passwordField, passwordInvalidLabel, formattedErrors);
   } else {

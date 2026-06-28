@@ -8,7 +8,7 @@ export class FieldError {
     this.errors.add(errKey);
   }
 
-  remove(errKey: string, field: HTMLInputElement, label: HTMLElement): void{
+  remove(errKey: string, field: HTMLInputElement, label: HTMLElement): void {
     field.classList.remove('input-error');
     label.classList.add('hidden');
     this.errors.delete(errKey);
