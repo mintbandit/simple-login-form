@@ -10,6 +10,8 @@ import { connect, newDb, SqliteSession, SqliteUserRepository } from "./db";
 import { comparePassword, hashPassword } from "./auth";
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { clearFlashCookie, FLASH_MSG_COOKIE } from "./flash";
+import { checkUsername } from "../shared/username-rules";
+import { checkComplexity } from "../shared/password-rules";
 
 dotenv.config();
 
@@ -139,6 +141,20 @@ fastify.post('/account/signup', async (request, reply) => {
 
   if(requestData.agreedToTerms !== 'on'){
     setFlashCookie(reply, 'You must agree to the terms to sign up.');
+    return await reply.redirect('/signup');
+  }
+
+  const usernameFailures = checkUsername(requestData.email);
+  if(usernameFailures.length > 0){
+    const formattedErrors = usernameFailures.join('<br>');
+    setFlashCookie(reply, formattedErrors);
+    return await reply.redirect('/signup');
+  }
+
+  const passwordFailures = checkComplexity(requestData.password);
+  if(passwordFailures.length > 0){
+    const formattedErrors = passwordFailures.join('<br>');
+    setFlashCookie(reply, formattedErrors);
     return await reply.redirect('/signup');
   }
 
