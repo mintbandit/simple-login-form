@@ -5,3 +5,5 @@ allowBuilds:
   lmdb: true
   msgpackr-extract: true
   sqlite3: true
+minimumReleaseAgeExclude:
+  - postcss@8.5.16
