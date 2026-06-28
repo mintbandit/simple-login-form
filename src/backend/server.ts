@@ -181,6 +181,27 @@ fastify.post('/account/signup', async (request, reply) => {
   }
 });
 
+fastify.get('/welcome', async (request, reply) => {
+  const sessionId= readSessionCookie(request);
+  if(sessionId === undefined){
+    setFlashCookie(reply, 'Please sign in to continue.');
+    return await reply.redirect('/signin');
+  }
+
+  const db = await connect(USER_DB);
+  const sessions = new SqliteSession(db);
+  const user = await sessions.get(sessionId);
+  if(user === undefined){
+    setFlashCookie(reply, 'Your session has expired. Please sign in to continue.');
+    return await reply.redirect('/signin');
+  }
+
+  const rendered = templates.render('welcome.njk', { environment, email: user.email });
+  return await reply
+    .header('content-type', 'text/html; charset=utf-8')
+    .send(rendered);
+});
+
 const start = async (): Promise<void> => {
   try {
     const db = await connect(USER_DB);
