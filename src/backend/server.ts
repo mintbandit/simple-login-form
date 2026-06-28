@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { connect, newDb, SqliteSession, SqliteUserRepository } from "./db";
 import { comparePassword, hashPassword } from "./auth";
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { clearFlashCookie, FLASH_MSG_COOKIE } from "./flash";
 
 dotenv.config();
 
@@ -48,9 +49,20 @@ type AccountLoginRequest = z.infer<typeof accountLoginRequestSchema>;
   fastify.register(cookie,{
     secret: cookieSecret,
   });
+  fastify.register(clearFlashCookie);
   fastify.register(staticFiles, {
     root: path.join(__dirname, '../../dist')
   });
+}
+
+function setFlashCookie(reply: FastifyReply, msg: string): void {
+  reply.setCookie(FLASH_MSG_COOKIE, msg, {
+    path: '/',
+  });
+}
+
+function readFlashCookie(request: FastifyRequest): string | undefined {
+  return request.cookies[FLASH_MSG_COOKIE]
 }
 
 function setSessionCookie(reply: FastifyReply, sessionId: string): void {
@@ -79,7 +91,7 @@ fastify.post('/account/signin', async (request, reply) => {
   try {
     requestData = accountCreateRequestSchema.parse(request.body);
   } catch (e) {
-    // TODO show error message
+    setFlashCookie(reply, 'There was an error processing your request.');
     return await reply.redirect('/signin');
   }
 
@@ -88,12 +100,12 @@ fastify.post('/account/signin', async (request, reply) => {
   try {
     const user = await userRepository.findByEmail(requestData.email);
     if(user === undefined){
-      // TODO show error message
+      setFlashCookie(reply, 'Invalid login credentials');
       return await reply.redirect('/signin')
     }
     const passwordMatches = await comparePassword(requestData.password, user.hashedPassword);
     if(!passwordMatches){
-      // TODO show error message
+      setFlashCookie(reply, 'Invalid login credentials');
       return await reply.redirect('/signin');
     }
 
@@ -102,7 +114,7 @@ fastify.post('/account/signin', async (request, reply) => {
     setSessionCookie(reply, sessionId);
     return await reply.redirect('/welcome');
   } catch (e) {
-    // TODO show error message
+    setFlashCookie(reply, 'Invalid login credentials');
     return await reply.redirect('/signin');
   }
 });
@@ -119,12 +131,12 @@ fastify.post('/account/signup', async (request, reply) => {
   try{
     requestData = accountCreateRequestSchema.parse(request.body);
   } catch(e) {
-    // TODO show error message
+    setFlashCookie(reply, 'There was an error processing your request.');
     return await reply.redirect('/signup');
   }
 
   if(requestData.agreedToTerms !== 'on'){
-    // TODO show error message
+    setFlashCookie(reply, 'You must agree to the terms to sign up.');
     return await reply.redirect('/signup');
   }
 
@@ -146,7 +158,7 @@ fastify.post('/account/signup', async (request, reply) => {
     setSessionCookie(reply, sessionId);
     return await reply.redirect('/welcome');
   } catch (e) {
-    // TODO show error message
+    setFlashCookie(reply, 'That account already exists.');
     return await reply.redirect('/signup');
   }
 });
