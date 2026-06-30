@@ -25,7 +25,6 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^26.0.1",
     "@types/nunjucks": "^3.2.6",
-    "@types/sqlite3": "^3.1.11",
     "@typescript-eslint/eslint-plugin": "^8.62.1",
     "@typescript-eslint/parser": "^8.62.1",
     "concurrently": "^10.0.3",
@@ -60,7 +59,7 @@
     "fastify-plugin": "^6.0.0",
     "nunjucks": "^3.2.4",
     "promised-sqlite3": "^2.1.0",
-    "sqlite3": "^5.1.7",
+    "sqlite3": "^6.0.1",
     "uuid": "^14.0.1"
   }
 }
