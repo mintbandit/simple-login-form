@@ -13,7 +13,7 @@ import { clearFlashCookie, FLASH_MSG_COOKIE } from "./flash";
 import { checkUsername } from "../shared/username-rules";
 import { checkComplexity } from "../shared/password-rules";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const SESSION_COOKIE = "SESSION_ID";
 
